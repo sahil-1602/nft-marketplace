@@ -16,10 +16,6 @@ contract ERC721Enumerable is ERC721 {
     // mapping from token ID index of the owner tokens list
     mapping(uint256 => uint256) private _ownedTokensIndex;
 
-    function totalSupply() external view returns (uint256) {
-        return _allTokens.length;
-    }
-
     // function tokenByIndex(uint256 _index) external view returns (uint256);
 
     function _mint(address to, uint256 tokenId) internal override(ERC721) {
@@ -28,11 +24,42 @@ contract ERC721Enumerable is ERC721 {
         // A. Add tokens to the owner
         // B. All tokens to our totalsupply - to allTokens
 
-        _addTokensToTotalSupply(tokenId);
+        _addTokensToAllTokenEnumeration(tokenId);
+        _addTokensToOwnerEnumeration(to, tokenId);
     }
 
-    function _addTokensToTotalSupply(uint256 tokenId) private {
+
+    // add tokens to the _allTokens array and set the position of the tokens indexes
+    function _addTokensToAllTokenEnumeration(uint256 tokenId) private {
+        _allTokensIndex[tokenId] = _allTokens.length;
         _allTokens.push(tokenId);
+    }
+
+    
+    function _addTokensToOwnerEnumeration(address to, uint256 tokenId) private {
+        // ownedTokensIndex tokenId set to address of ownedTokens position
+        _ownedTokensIndex[tokenId] = _ownedTokens[to].length;
+        // add address and tokenId to the _ownedTokens
+        _ownedTokens[to].push(tokenId);
+    }
+
+    // return the total supply of _allTokens array
+    function totalSupply() public view returns (uint256) {
+        return _allTokens.length;
+    }
+
+
+    // returns tokenByIndex
+    function tokenByIndex(uint256 index) public view returns(uint256) {
+        require(index < totalSupply(), 'global index is out of bounds!');
+        return _allTokens[index];
+    }
+
+    // returns tokenOfOwnerByIndex
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view returns(uint256) {
+        require(owner != address(0), 'owner address zero');
+        require(index < balanceOf(owner), 'owner index is out of bounds!');
+        return _ownedTokens[owner][index];
     }
 
 }
