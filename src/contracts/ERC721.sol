@@ -27,12 +27,15 @@ contract ERC721 {
     // Mapping from owner to number of owned tokens
     mapping(address => uint256) private _OwnedTokensCount;
 
+    // Mapping from token id to approved addresses
+    mapping(uint256 => address) private _tokenApprovals;
+
     function balanceOf(address _owner) public view returns(uint256) {
         require(_owner != address(0), 'ERC721: Address cannot be zero');
         return _OwnedTokensCount[_owner];
     }
 
-    function ownerOf(uint256 _tokenId) external view returns (address) {
+    function ownerOf(uint256 _tokenId) public view returns (address) {
         address owner = _tokenOwner[_tokenId];
         require(owner != address(0), 'ERC721: Owner does not exist');
         return owner;
@@ -57,6 +60,29 @@ contract ERC721 {
         _OwnedTokensCount[to] += 1;
 
         emit Transfer(address(0), to, tokenId);
+    }
+
+    function _transferFrom(address _from, address _to, uint256 _tokenId) internal {
+        // checks for invalid address
+        require(_to != address(0), 'ERC721: receiving address zero');
+        require(_from != address(0), 'ERC721: sending address zero');
+        // checking if the _from address owns the token
+        require(ownerOf(_tokenId) == _from, 'ERC721: Owner address does not own the specified token');
+        
+         // update the balance of the address _from token
+        _OwnedTokensCount[_from] -= 1;
+
+        // update the balance of the address _to
+        _OwnedTokensCount[_to] += 1;
+
+        // add the token id to the address receiving the token
+        _tokenOwner[_tokenId] = _to;
+
+        emit Transfer(_from, _to, _tokenId);
+    }
+
+    function transferFrom(address _from, address _to, uint256 _tokenId) public {
+        _transferFrom(_from, _to, _tokenId);
     }
 
 }
